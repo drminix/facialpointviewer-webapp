@@ -28,7 +28,7 @@
     <!--   Header   -->
     <div class="section no-pad-bot" id="index-banner">
       <div class="container">
-        <h5 class="header center blue-text small">Real-time Facial point detection using machine learning(tensorflow.js)</h5>
+        <h5 class="header center blue-text small">Real-time Facial Keypoints Detection using Machine Learning(tensorflow.js)</h5>
         <div class="row center">
           <h6 class="header col s12 light">Model: VGG-16 transfer learning + data augmentation</h6>
             <h7 class="header col s12 light"><strong>*NOTE*</strong> Facial point detection will be enabled once the model is downloaded.</h7>
@@ -41,7 +41,7 @@
     <div class="section no-pad-bot light-blue lighten-4">
     <div class="container">
     <div class="row center">
-      <button id="button_capture" class="waves-effect waves-light light-blue btn-small">Start Button</button>
+      <button disabled id="button_capture" class="waves-effect waves-light light-blue btn-small">Start Button</button>
       <br/><br/>
     </div>
     </div>
@@ -53,6 +53,7 @@
     <div class="row center">
         <video id="video" width="400" height="400" style="display:none"></video>
         <canvas id="canvas_output" style="border:1px solid #000000;"> </canvas> 
+        <canvas id="canvas_debug" width="96" height="96" style="border:1px solid #000000;" style="display:none"> </canvas> 
     </div>
     </div>
     </div>   
@@ -65,8 +66,8 @@
         <p>
             - Github page for Desktop application written in Python & QT:
             <a href="https://github.com/drminix/facialpointviewer">https://github.com/drminix/facialpointviewer</a><br/>
-        - Github page for Web application written in Javascript & Tensorflow.js <a href="https://github.com/drminix/facialpointviewer/webapp">https://github.com/drminix/facialpointviewer/webapp</a><br/>
-        - Ipython notebook used for training VGG-16 network <a href="https://github.com/drminix/facialpointviewer/webapp">https://github.com/drminix/facialpointviewer/webapp</a><br/> <br/>
+        - Github page for Web application written in Javascript & Tensorflow.js <a href="https://github.com/drminix/facialpointviewer-webapp">https://github.com/drminix/facialpointviewer-webapp</a><br/>
+        - IPython Notebook used for training VGG-16 network <a href="https://github.com/drminix/facialpointviewer/tree/master/notebook">https://github.com/drminix/facialpointviewer/tree/master/notebook</a><br/> <br/>
         </p>
   
     </div>

@@ -2,7 +2,7 @@ const video = document.getElementById('video');
 const actionBtn = document.getElementById('button_capture');
 const width = 400;
 const height = 400;
-const FPS = 60;
+const FPS = 10;
 let stream;
 let streaming = false;
 let faceCascadeFile = 'haarcascade_frontalface_default.xml';
@@ -15,6 +15,7 @@ const MOUSE_RIGHT_CORNER = [24,25];
 const NOSE_TIP = [20,21];
 const TARGET_IMAGE_WIDTH = 96;
 const TARGET_IMAGE_HEIGHT = 96;
+
 
 //for debugging with nginx
 //const model_url = `http://localhost:8080/model.json`
@@ -29,6 +30,7 @@ function onOpenCvReady() {
   cv.onRuntimeInitialized = onReady;
   document.body.classList.remove("loading");
   console.log("OpenCV is ready: ",cv);
+  document.getElementById("button_capture").removeAttribute("disabled");
 }
 
 async function loadModel() {
@@ -49,7 +51,8 @@ function onReady() {
     const cap = new cv.VideoCapture(video);
     let classifier;
     let faces 
-  
+    const TARGET_IMAGE_SIZE = new cv.Size(TARGET_IMAGE_WIDTH,TARGET_IMAGE_WIDTH);
+
     
     actionBtn.addEventListener('click', () => {
         if (streaming) {
@@ -72,6 +75,8 @@ function onReady() {
             src = new cv.Mat(height, width, cv.CV_8UC4);
             dst = new cv.Mat(height, width, cv.CV_8UC4);
             faces = new cv.RectVector();
+            croppedFace = new cv.Mat();
+            croppedFace_scaled = new cv.Mat();
             gray = new cv.Mat();
             
             // load pre-trained classifiers
@@ -101,6 +106,7 @@ function onReady() {
             src.delete();
             dst.delete();
             gray.delete();
+            croppedFace.delete();
             faces.delete();
             classifier.delete();
             return;
@@ -108,6 +114,7 @@ function onReady() {
         const begin = Date.now();
         cap.read(src);
         src.copyTo(dst);
+        //data processing in grayscale image
         cv.cvtColor(dst, gray, cv.COLOR_RGBA2GRAY,0);
         
         // detect faces.
@@ -117,22 +124,33 @@ function onReady() {
             let face = faces.get(i);
            
             
+            //display rectangle around the detected face
             let point1 = new cv.Point(face.x, face.y);
             let point2 = new cv.Point(face.x + face.width, face.y + face.height);
             cv.rectangle(dst, point1, point2, [255, 0, 0, 255]);
+
+        
+            //getting the target face. Somehow ROI function segfaults..
+            let croppedFace = new cv.Mat(face.height, face.width, cv.CV_8UC1);
+            for(let row=0;row<face.height;row++) {
+               for(let col=0; col<face.width;col++) {
+                     croppedFace.data[row*croppedFace.cols+col] =   gray.data[(row+face.y)*gray.cols + (col + face.x)];
+                }
+            }
+          
+                                        
+             //cv.imshow('canvas_debug', croppedFace);
+             cv.resize(croppedFace, croppedFace_scaled, TARGET_IMAGE_SIZE,
+                      1/6,1/6, cv.INTER_NEAREST);
+             // cv.imshow('canvas_debug', croppedFace_scaled);
             
-            //rect = new cv.Rect(100, 100, 200, 200);
-            //dst = src.roi(rect);
-            //let rect = cv.Rect(point1.x,point1.y, point2.x,point2.y);
-            //if(face.width < TARGET_IMAGE_WIDTH || face.height < //TARGET_IMAGE_HEIGHT) {
-            //    continue;
-            //}
-            if(model_loaded) {
+             if(model_loaded) {
+                //croped out the face for ML
                 //convert data to array(TODO: must be a better way to copy out the data)
                 const target_array = [];
-                for(let row=face.y;row<face.y+TARGET_IMAGE_HEIGHT;row++) {
-                    for(let col=face.x; col<face.x+TARGET_IMAGE_WIDTH;col++) {
-                        let data = gray.data[row*gray.cols+col];
+                for(let row=0;row<TARGET_IMAGE_HEIGHT;row++) {
+                    for(let col=0; col<TARGET_IMAGE_WIDTH;col++) {
+                        let data = croppedFace_scaled.data[row*croppedFace_scaled.cols+col];
                         target_array.push(data);
                     }
                 }
@@ -150,7 +168,7 @@ function onReady() {
                 
                 scale_x = face.width / TARGET_IMAGE_WIDTH;
                 scale_y = face.height / TARGET_IMAGE_HEIGHT;
-                for(let i=0;i<22;i+=2) {
+                for(let i=0;i<outputArray.length;i+=2) {
                     center_x = Math.floor(face.x + outputArray[i]*scale_x);
                     center_y = Math.floor(face.y + outputArray[i+1]*scale_y);
                     cv.circle(dst, new cv.Point(center_x,center_y), 2,  [255, 255, 0,255] , 1,8,0);
